@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dead Trail: Road to Sanctuary</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+:root{--bg:#cfc3a4;--pn:#efe6cf;--tx:#2a1c14;--bd:#3a2a22;--bt:#d9a441;--ac:#8f1d1d;--gd:#2e6b3a;--bad:#a11;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#140b0e;--pn:#1b2a2e;--tx:#ffbf5e;--bd:#5b7a80;--bt:#3a1d22;--ac:#e5483b;--gd:#7fd37a;--bad:#ff6b5b}}
+:root[data-theme=dark]{--bg:#140b0e;--pn:#1b2a2e;--tx:#ffbf5e;--bd:#5b7a80;--bt:#3a1d22;--ac:#e5483b;--gd:#7fd37a;--bad:#ff6b5b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:21px/1.3 "VT323","Courier New",monospace}
+#w{max-width:760px;margin:0 auto;padding:10px}
+h1{margin:6px 0;font:16px/1.4 "Press Start 2P","Courier New",monospace;color:var(--ac);animation:fk 3s infinite}
+#st{position:relative}
+canvas{width:100%;height:auto;display:block;border:4px solid var(--bd);box-shadow:4px 4px 0 var(--bd);image-rendering:pixelated}
+#fx,#fl{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#fl{background:var(--fc,#fff);opacity:0}
+.pt{position:absolute;font-size:28px;animation:pf 1.2s ease-out forwards}
+#st.sk{animation:sk .45s}#st.gl{animation:gl .6s}
+@keyframes pf{0%{opacity:1;transform:translate(0,0) scale(.4) rotate(0)}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1.6) rotate(var(--r))}}
+@keyframes fl{0%{opacity:.7}100%{opacity:0}}
+@keyframes sk{20%{transform:translate(-8px,4px)}40%{transform:translate(8px,-4px)}60%{transform:translate(-5px,-3px)}80%{transform:translate(5px,3px)}}
+@keyframes gl{30%{filter:hue-rotate(90deg) saturate(3);transform:skewX(6deg)}60%{filter:invert(1);transform:skewX(-6deg)}}
+@keyframes fk{45%{opacity:1}50%{opacity:.35}55%{opacity:1}75%{opacity:.6}}
+@keyframes ti{from{transform:translateY(8px);opacity:0}}
+#hud,#ui,#pty{background:var(--pn);border:4px solid var(--bd);box-shadow:4px 4px 0 var(--bd);padding:8px 12px;margin-top:10px}
+#hud:empty,#pty:empty{display:none}
+#hud div{margin:2px 0}
+#pty{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;font-size:18px}
+.pp.dead{opacity:.4;text-decoration:line-through}
+.bar,.pp i{display:block;height:10px;background:rgba(128,128,128,.35);border:2px solid var(--bd);overflow:hidden}
+.bar{display:inline-block;width:90px;vertical-align:middle}
+.bar u,.pp u{display:block;height:100%;background:var(--gd)}
+#pg{height:14px;border:4px solid var(--bd);background:var(--pn);margin-top:10px;box-shadow:4px 4px 0 var(--bd)}
+#pg u{display:block;height:100%;background:var(--ac);transition:width .4s}
+button{font:inherit;background:var(--bt);color:var(--tx);border:3px solid var(--bd);box-shadow:3px 3px 0 var(--bd);padding:5px 12px;margin:4px;cursor:pointer}
+button:hover{filter:brightness(1.2)}button:focus-visible,input:focus-visible{outline:3px solid var(--ac)}
+button:disabled{opacity:.5;cursor:default}
+input{font:inherit;padding:4px;margin:6px 0;border:3px solid var(--bd);background:var(--bg);color:var(--tx)}
+#ui p{margin:4px 0 8px;min-height:1.3em}
+.row{display:flex;align-items:center;gap:4px}.row span{flex:1}
+#ui{counter-reset:b}#ui>button{counter-increment:b;animation:ti .25s backwards}#ui>button::before{content:counter(b) ". ";opacity:.6}
+@media(prefers-reduced-motion:reduce){.pt,#fl{display:none}#st,h1,#ui>button{animation:none!important}}
+</style></head><body>
+<div id="w"><h1>🧟 DEAD TRAIL</h1>
+<div id="st"><canvas id="c" width="320" height="120"></canvas><div id="fx"></div><div id="fl"></div></div>
+<div id="pg"><u></u></div><div id="hud"></div><div id="pty"></div><div id="ui"></div></div>
+<script>
+const $=i=>document.getElementById(i),R=n=>Math.floor(Math.random()*n),pk=a=>a[R(a.length)],ch=p=>Math.random()<p;
+const PN=["Cruise","Fast","Reckless"],RN=["Filling","Meager","Bare bones"],WS={snow:.6,thunderstorm:.7,rain:.85,fog:.8};
+const NMS=["Sam","Riley","Dana","Marcus","Jo","Luis","Priya","Ed","Mae","Ray"],NMM={food:"lb of food",ammo:"boxes of ammo",med:"doses of medicine",parts:"spare parts",fuel:"gallons of fuel"};
+const ERA=[
+[1929,"Black Tuesday Plague",[9,29],["#8a6b3f","#d9b877"],"The market crashed and the dead rose with it.",["Ford Model A","Mack AC Truck","Packard Touring Bus"],["parts",2,"+2 parts: simple engines"],"A Hooverville soup line glows around oil-drum fires."],
+[1955,"Atomic Age Outbreak",[5,14],["#3a7ca5","#f4c7c3"],"Fallout drills were nothing next to this. Chrome and rock ’n’ roll.",["Chevy Bel Air","Studebaker Pickup","Chrysler Wagon"],["food",120,"+120 lb food: a full diner trunk"],"A drive-in screen still flickers a cheerful safety film."],
+[1969,"Summer of Chaos",[7,15],["#c4562b","#f2b84b"],"The festival never ended; the crowd just won’t stop shuffling.",["Dodge Charger","Ford F-100","VW Microbus"],["ammo",6,"+6 ammo: army surplus"],"A peaceful commune hums by the road, well fed."],
+[1984,"Neon Cold War",[10,2],["#5b2a86","#e85d9c"],"Synths, shoulder pads and a virus slipped from a Soviet lab.",["DeLorean","Army Jeep","Dodge Ram Van"],["med",2,"+2 medicine: pharmacy raid"],"A ghost-mall arcade still blinks its neon."],
+[1999,"Y2K Outbreak",[11,31],["#0f5b66","#78d6c6"],"The clocks rolled over and so did the dead. Pagers buzz in the dark.",["Pontiac Firebird","Hummer H1","Ice Cream Truck"],["money",150,"+$150: ATM glitch"],"A strip-mall payphone rings: a Y2K survivor hotline."]];
+const VT=[["Muscle",1.25,.6,13,[44,9,12,20,7],"fast, thirsty, thin armor"],["Tough",1,1,11,[42,11,0,16,9],"balanced and sturdy"],["Big",.82,1.4,9,[60,20,2,56,0],"slow, huge, near unstoppable"]];
+const COL=[["Blood Red","#c0392b"],["Bone White","#e8e2d0"],["Rust Orange","#c46a1f"],["Hazard Yellow","#e8c01f"],["Midnight Blue","#2b4a8c"],["Matte Black","#2a2a2e"]];
+const RT=[["Route 66 West","Chicago to Santa Monica Pier",2400,1,["St. Louis Barricade","Tulsa Fuel Depot","Amarillo Silo Camp","Albuquerque Overpass","Barstow Junkyard"]],["Northern Run","Detroit to the Canadian Wall",1500,1.25,["Lake Huron Ferry","Duluth Grain Elevator","Fargo Bunker","Brandon Roadhouse"]],["Gulf Coast Escape","Atlanta to the Key West Fleet",1900,1.1,["Macon Rail Yard","Mobile Docks","New Orleans Levee","Tampa Overpass","Everglades Ranger Post"]]];
+const PF=[["Soldier","ammo",8,"+8 ammo, fights better"],["Mechanic","parts",3,"+3 parts, cheaper repairs"],["Nurse","med",3,"+3 medicine, stronger cures"],["Scavenger","money",150,"+$150, finds more loot"]];
+const WP=[["Baseball Bat",.45,0,"melee"],["Shotgun",.75,1,"gun"],["Katana",.62,0,"melee"],["Crossbow",.6,1,"gun"]];
+const PET=[["Loyal Dog","🐕","barks warn of ambushes"],["Stray Cat","🐈","purrs heal +1 health a day"],["Go solo","","no distractions"]];
+const IT=[["fuel","gal fuel",10,15],["food","lb food",20,10],["ammo","ammo boxes",2,8],["med","medicine",1,12],["parts","parts",1,15]];
+const FX={time:["⏳ 🕰️ 📅","fall","w","gl"],car:["💨 🔥 ⚙️","burst","",0],paint:["🎨 💧 🖌️","burst","g",0],map:["🗺️ 📍 🧭","rise","",0],badge:["⭐ 🎖️ ✨","burst","w",0],gun:["💥 🔫","burst","w","sk"],melee:["💢 🩸 💥","burst","r","sk"],pet:["❤️ 🐾","rise","",0],buy:["💰 🪙 💵","rise","",0],fuel:["⛽ 💧","rise","",0],heal:["💊 💚 ✨","rise","g",0],zom:["🧟 💀 🦴","fall","r","sk"],boom:["💥 🔥","burst","r","sk"],fire:["🔥 🔥 💨","rise","r",0],skull:["💀 ☠️","rise","r","sk"],radio:["📻 📡 🎵","burst","g","gl"],tire:["🛞 🔧 ⚙️","burst","",0],run:["💨 💨","rise","",0],heli:["🚁 💨","fall","w",0],name:["✍️ 📓","rise","",0]};
+let G,P=[],TI,END=2400,hz=2,fr=0,off=0,CX=-80,CT=90,ZS=[],SM=[];
+const BL=Array.from({length:40},(_,i)=>[i*22,18+R(42),12+R(14)]);
+const A=()=>P.filter(p=>!p.x),pa=()=>pk(A()),lose=(k,n)=>{G[k]=Math.max(0,G[k]-n)},up=n=>A().forEach(p=>p.h=Math.min(100,p.h+n)),adv=n=>{for(let i=0;i<n;i++)day(1)};
+const stop=()=>{clearInterval(TI);if(G)G.run=0},cn=()=>Math.ceil([2,1.5,1][G.rat]*A().length);
+const LM=()=>RT[G.rt][4].map((n,i,a)=>[n,Math.round(END*(i+1)/(a.length+1))]);
+const dmg=n=>{G.hp=Math.max(0,G.hp-Math.round(n/VT[G.vt][2]))};
+function newG(){G={on:0,mi:0,d:new Date(1955,5,14),fuel:0,food:0,ammo:0,med:0,parts:0,money:420,pace:0,rat:0,w:"clear",T:60,nl:0,hp:100,era:2,vt:-1,col:"#777",rt:0,pf:0,wp:0,pet:2,run:0,msgs:[],tn:0};P=[];CX=-80;ZS=[]}
+/* ===== EFFECTS ===== */
+function fx(k){const f=FX[k];if(!f)return;const e=f[0].split(" "),F=$("fx"),m=f[1];
+ for(let i=0;i<14;i++){const s=document.createElement("span"),a=Math.random()*6.28,r=80+R(140),b=m=="burst";s.className="pt";s.textContent=pk(e);
+  s.style.cssText=`left:${b?50:R(95)}%;top:${b?50:m=="rise"?85:0}%;--x:${b?Math.cos(a)*r:R(60)-30}px;--y:${b?Math.sin(a)*r:m=="rise"?-120-R(60):150+R(60)}px;--r:${R(360)}deg;animation-delay:${R(300)}ms`;
+  F.appendChild(s);setTimeout(()=>s.remove(),1700)}
+ if(f[2]){const l=$("fl");l.style.setProperty("--fc",{r:"#c00",g:"#2d2",w:"#fff"}[f[2]]);l.style.animation="none";void l.offsetWidth;l.style.animation="fl .5s"}
+ if(f[3]){const s=$("st");s.className="";void s.offsetWidth;s.className=f[3]}}
+/* ===== UI CORE ===== */
+function tw(el,t){el.textContent="";let i=0;const k=setInterval(()=>{el.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(k)},16)}
+function ask(t,o,nx=go){stop();const u=$("ui");u.innerHTML="<p id=m></p>";tw($("m"),t);
+ o.forEach(([l,f,x,c])=>{const b=document.createElement("button");b.textContent=l;if(c)b.style.borderLeft="12px solid "+c;
+  b.onclick=()=>{[...u.children].forEach(e=>e.disabled=1);if(x){fx(x);setTimeout(()=>run(f,nx),650)}else run(f,nx)};u.appendChild(b)})}
+function run(f,nx){const r=f();if(typeof r=="string")done(r,nx)}
+function done(t,nx=go){stop();t=(t+" "+G.msgs.splice(0).join(" ")).trim();const u=$("ui");u.innerHTML="<p id=m></p><button id=cc>Continue</button>";tw($("m"),t);hud();$("cc").onclick=nx}
+document.addEventListener("keydown",e=>{if(e.target.tagName=="INPUT")return;const b=$("ui").querySelectorAll(":scope>button")[e.key-1];if(b&&!b.disabled)b.click()});
+function hud(){if(!G.on)return;const g=G,l=LM()[g.nl];
+ $("hud").innerHTML=`<div><b>${g.d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</b> · ${g.w}, ${g.T}°F</div><div>To sanctuary: <b>${Math.max(0,END-Math.floor(g.mi))}</b> mi · Next: ${l?l[0]+" ("+(l[1]-Math.floor(g.mi))+" mi)":"the sanctuary gates"}</div><div>⛽<b>${Math.ceil(g.fuel)}</b> 🍖<b>${g.food}</b> 🔫<b>${g.ammo}</b> 💊<b>${g.med}</b> 🔧<b>${g.parts}</b> 💵<b>${g.money}</b></div><div>Car <i class=bar><u style="width:${g.hp}%"></u></i> · ${PN[g.pace]} pace · ${RN[g.rat]} rations ${PET[g.pet][1]}</div>`;
+ $("pty").innerHTML=P.map(p=>`<div class="pp${p.x?" dead":""}">${p.n}${p.inf>0?" 🩸"+p.inf+"d":""}<i><u style="width:${p.h}%;background:${p.h>60?"var(--gd)":p.h>30?"#e8a317":"var(--bad)"}"></u></i></div>`).join("");
+ $("pg").firstChild.style.width=Math.min(100,g.mi/END*100)+"%"}
+/* ===== SETUP: LOTS OF CHOICES ===== */
+function intro(){stop();newG();hz=2;$("hud").innerHTML="";$("pty").innerHTML="";$("pg").firstChild.style.width=0;
+ ask("The dead have risen somewhere in the 20th century. YOU pick the year, the ride, the crew and the road. Reach the last sanctuary before the horde catches you.",[["Begin the outbreak",sEra,"zom"]])}
+const sEra=()=>ask("Pick the year the dead rise:",ERA.map((e,i)=>[`${e[0]}: ${e[1]}`,()=>{G.era=i;G.d=new Date(e[0],e[2][0],e[2][1]);sVeh()},"time"]));
+const sVeh=()=>ask(ERA[G.era][4]+" Choose your ride:",VT.map((v,i)=>[`${ERA[G.era][5][i]} (${v[5]})`,()=>{G.vt=i;CX=-80;sCol()},"car"]));
+const sCol=()=>ask("Pick a paint job:",COL.map(([n,c])=>[n,()=>{G.col=c;sRt()},"paint",c]));
+const sRt=()=>ask("Choose your road to sanctuary:",RT.map((r,i)=>[`${r[0]}: ${r[1]} (${r[2]} mi)`,()=>{G.rt=i;END=r[2];sPf()},"map"]));
+const sPf=()=>ask("Who were you before the end?",PF.map((p,i)=>[`${p[0]}: ${p[3]}`,()=>{G.pf=i;sWp()},"badge"]));
+const sWp=()=>ask("Pick your weapon:",WP.map((w,i)=>[`${w[0]}${w[2]?" (uses ammo)":" (silent, no ammo)"}`,()=>{G.wp=i;sPet()},w[3]]));
+const sPet=()=>ask("Pick a companion:",PET.map((p,i)=>[`${p[1]} ${p[0]}: ${p[2]}`,()=>{G.pet=i;sName()},i<2?"pet":"run"]));
+function sName(){stop();$("ui").innerHTML='<p>Name the driver. Three survivors ride along.</p><input id=nm maxlength=12 value="Alex"> <button id=ok>Gather the crew</button>';$("ok").onclick=()=>{fx("name");setTimeout(crew,650)}}
+function crew(){const nm=$("nm").value.trim()||"Alex",pool=NMS.filter(n=>n!=nm).sort(()=>Math.random()-.5),e=ERA[G.era],f=PF[G.pf];
+ P=[nm,...pool.slice(0,3)].map(n=>({n,h:100,inf:0,x:0}));G[e[6][0]]+=e[6][1];G[f[1]]+=f[2];G.on=1;hz=0;hud();
+ shop(()=>{fx("car");go()},1,`Perks: ${e[6][2]}; ${f[3]}.`)}
+function shop(back,m,msg){const u=$("ui");stop();u.innerHTML=`<p>${msg} 💵 $${G.money}. Pack for the road.</p>`;
+ IT.forEach(([k,l,s,p])=>{const c=Math.ceil(p*m),r=document.createElement("div");r.className="row";r.innerHTML=`<span>${G[k]} ${l} ($${c} per ${s})</span>`;
+  const b=document.createElement("button");b.textContent="+"+s;b.onclick=()=>{if(G.money<c)return fx("skull");G.money-=c;G[k]+=s;fx("buy");shop(back,m,msg);hud()};r.appendChild(b);u.appendChild(r)});
+ const d=document.createElement("button");d.textContent="Done shopping";d.onclick=back;u.appendChild(d)}
+/* ===== DRIVING LOOP ===== */
+function wx(){const T=[30,34,45,58,68,78,86,84,72,58,42,32][G.d.getMonth()]+R(16)-8,r=Math.random();G.T=T;G.w=T<30?"snow":r<.12?"rain":r<.18?"thunderstorm":r<.26?"fog":T>92?"scorching":pk(["clear","clear","clear","overcast","windy"])}
+function hurt(p,n,c){if(p.x)return;p.h-=n;if(p.h<=0){p.h=0;p.x=1;p.inf=0;G.msgs.push(`${p.n} has died${c?" of "+c:""}.`)}}
+function day(rest){const a=A(),n=a.length,V=VT[G.vt];G.d.setDate(G.d.getDate()+1);wx();
+ if(!rest){const m=Math.round([90,125,165][G.pace]*V[1]*(WS[G.w]||1)*(.5+G.hp/200))+R(15);G.mi+=m;G.fuel=Math.max(0,G.fuel-m/V[3]);G.hp-=[0,R(2),R(5)][G.pace]}
+ G.food-=Math.ceil([2,1.5,1][G.rat]*n);let st=0;if(G.food<0){G.food=0;st=1}
+ a.forEach(p=>{const d=[1,0,-2][G.rat]+(rest?3:0)+(G.pet==1)+(G.pf==2&&rest)-(G.T<32)-(G.T>95)-(st?5:0);if(d<0)hurt(p,-d,st?"starvation":"exposure");else p.h=Math.min(100,p.h+d);if(p.inf>0&&--p.inf==0&&!p.x)G.tn=p})}
+function chk(){if(P[0].x){over(P[0].n+" is gone. Without a driver, the convoy falls apart.");return 1}if(!A().length){over("No one is left alive.");return 1}}
+function go(){if(chk())return;hz=0;G.run=1;$("ui").innerHTML='<p id=tk>The engine growls to life…</p><button id=pu>Pull over (menu)</button>';$("pu").onclick=()=>{stop();menu()};clearInterval(TI);TI=setInterval(tick,750)}
+function tick(){day();hud();if(chk())return;const l=LM()[G.nl];
+ if(G.msgs.length){fx("skull");return done("")}
+ if(G.mi>=END)return win();
+ if(G.tn){const p=G.tn;G.tn=0;if(!p.x)return turn(p)}
+ if(G.hp<=0)return wreck();if(G.fuel<=0)return dry();
+ if(l&&G.mi>=l[1]){G.nl++;return post(l[0])}
+ if(ch(.28*RT[G.rt][3]))return ev();
+ $("tk").textContent=G.fuel<20?"⚠️ The fuel needle sits near E.":G.food<cn()*3?"⚠️ The food is almost gone.":pk(["Dead cornfields roll by.","A crow picks at a wrecked sedan.","The radio hisses static.","Smoke rises on the horizon.",`${pa().n} ${pk(["counts the dead on the shoulder","sharpens a blade","keeps watch at the window","spots a burning farmhouse"])}.`])}
+function menu(){ask("🅿️ You pull over. The engine ticks. Something moans far away.",[["Drive on",go,"car"],["Scavenge nearby (1 day)",scav,"zom"],["Rest (1 day)",()=>{adv(1);up(8);return "Everyone sleeps in shifts. +health."},"heal"],["Pace: "+PN[G.pace]+" ▸",()=>{G.pace=(G.pace+1)%3;menu()}],["Rations: "+RN[G.rat]+" ▸",()=>{G.rat=(G.rat+1)%3;menu()}],["Use medicine",med,"heal"],["Repair car (1 part)",rep,"tire"]],menu)}
+function med(){if(!G.med)return "No medicine left.";const b=A().find(p=>p.inf>0),p=b||A().sort((x,y)=>x.h-y.h)[0];G.med--;if(b){if(ch(G.pf==2?.9:.7)){b.inf=0;return `The serum works! ${b.n} is no longer infected.`}return `The serum fails. ${b.n} is still doomed.`}p.h=Math.min(100,p.h+(G.pf==2?40:25));return `${p.n} feels much better.`}
+function rep(){if(!G.parts)return "No spare parts.";if(!(G.pf==1&&ch(.5)))G.parts--;G.hp=Math.min(100,G.hp+35+(G.pf==1?15:0));return "Wrenches ring. The car runs better."}
+function fight(m){const w=WP[G.wp];let p=w[1]+(G.pf==0?.1:0)-m;if(w[2]){if(G.ammo>0)G.ammo--;else p-=.3}return ch(p)}
+const bite=()=>{const p=pa();p.inf=3;hurt(p,15);fx("skull");return `${p.n} is bitten! Three days to cure them.`};
+function scav(){adv(1);const r=Math.random();if(r<.3+(G.pf==3?.15:0)){const k=pk(["food","ammo","med","parts","fuel"]),q=k=="food"?40+R(80):k=="fuel"?10+R(20):1+R(3);G[k]+=q;fx("buy");return `You find ${q} ${NMM[k]}.`}if(r<.6)return "Empty shelves, dust and graffiti.";return fight(.1)?"Zombies burst from a freezer. You cut your way out.":bite()}
+/* ===== CRISES ===== */
+function turn(p){fx("zom");if(p==P[0])return over(p.n+" turns at the wheel. The last thing you hear is your own name.");
+ ask(`💀 ${p.n} turns! Eyes glaze, jaw snaps.`,[...(G.med?[["Inject the serum (1 med)",()=>{G.med--;if(ch(G.pf==2?.85:.65)){p.inf=0;return p.n+" shudders and wakes up human!"}p.x=1;return "Too late. You put them down."},"heal"]]:[]),["Put them down",()=>{if(G.ammo&&WP[G.wp][2])G.ammo--;p.x=1;return p.n+" is at peace."},"gun"],["Shove them out and drive",()=>{p.x=1;return p.n+" shrinks in the mirror…"},"run"]])}
+function wreck(){if(G.parts>=2){G.parts-=2;G.hp=40;fx("tire");return done("The engine dies in a cloud of steam. You rebuild it roadside with 2 parts.")}over("The car is a smoking wreck and you have no parts. The dead close in.")}
+function dry(){ask("⛽ The engine coughs and dies. Tank empty.",[["Search wrecks for gas (1 day)",()=>{adv(1);if(ch(.6+(G.pf==3?.15:0))){const q=15+R(30);G.fuel+=q;return `A full tank! +${q} gal.`}G.fuel+=5;return fight(.1)?"Zombies in the wrecks, but you scrape up 5 gal.":bite()},"fuel"],...(G.money>=60?[["Buy fuel from a convoy ($60)",()=>{G.money-=60;G.fuel+=25;return "+25 gal. Highway robbery."},"buy"]]:[]),["Push the car 10 mi (2 days)",()=>{adv(2);G.mi+=10;G.fuel+=2;return "Sore backs, a mile of dead silence."},"run"]])}
+function post(n){stop();hz=0;const o=()=>post(n);ask(`📍 ${n}: a fortified outpost with a sputtering generator and wary eyes.`,[["Rest 2 days",()=>{adv(2);up(12);return "Warm food, a roof, no moaning. +health."},"heal"],["Trade for supplies",()=>shop(o,1.3,"Outpost prices."),"buy"],["Pace & rations",()=>{G.pace=(G.pace+1)%3;G.rat=(G.rat+1)%3;return `Now ${PN[G.pace]} pace, ${RN[G.rat]} rations.`}],["Back on the road",go,"car"]],o)}
+function win(){stop();fx("badge");setTimeout(()=>fx("heli"),500);const a=A().length;ask(`🏁 SANCTUARY! Gates open on ${RT[G.rt][1].split(" to ")[1]}. ${a} of ${P.length} survived. Score: ${a*250+G.food+G.parts*20+G.ammo*5+G.hp*3}.`,[["Start a new outbreak",intro,"time"]])}
+function over(w){stop();fx("skull");ask(`☠️ ${w} You made it ${Math.floor(G.mi)} of ${END} miles.`,[["Start a new outbreak",intro,"time"]])}
+/* ===== EVENTS ===== */
+const E=[
+{a:1,z:1,f(){ask("🧟 A HORDE pours over the hill, hundreds strong!",[["Floor it through them",()=>{dmg(15+R(15));return ch(.5)?"Bodies bounce off the bumper. You break through!":bite()},"boom"],[`Fight from the roof (${WP[G.wp][0]})`,()=>fight(.25)?"You hold the line until the horde thins.":bite(),WP[G.wp][3]],["Hide in a building (1 day)",()=>{adv(1);if(ch(.6))return "The dead drift past. Only a day lost.";lose("food",40);return "They smell you. You flee, dropping 40 lb of food."},"run"]])}},
+{a:1,z:1,f(){ask("A wall of wrecked cars blocks the highway.",[["Ram through",()=>{dmg(20+R(15));return "Metal screams. You’re through, dented."},"boom"],["Clear it by hand (1 day)",()=>{adv(1);return ch(.6)?"The road is clear.":bite()},"melee"],["Detour (1 day, 10 gal)",()=>{adv(1);lose("fuel",10);return "A long way around."},"map"]])}},
+{z:1,f(){ask("An abandoned gas station. The pumps look untouched.",[["Siphon the tanks",()=>{if(ch(.65)){const q=15+R(25);G.fuel+=q;return `Full underground tank! +${q} gal.`}return fight(.1)?"Zombies in the shadows, but you win and fill up 8 gal.":bite()},"fuel"],["Raid the store",()=>{const k=pk(["food","ammo","med"]),q=k=="food"?60:1+R(3);G[k]+=q;return `Picked clean, but you find ${q} ${NMM[k]}.`},"buy"],["Drive past",()=>"Not worth the risk."]])}},
+{f(){ask("A hitchhiker waves frantically from the shoulder.",[["Pick them up",()=>{const r=Math.random(),n=pk(NMS)+" Jr.";if(r<.45){P.push({n,h:80,inf:0,x:0});G.med+=2;return n+" is a field medic! They join and bring 2 medicine."}if(r<.7){P.push({n,h:70,inf:2,x:0});return n+" hid a bite. The clock is already ticking."}lose("food",60);return "Thief! They grab 60 lb of food and bolt."},"heal"],["Toss them a ration",()=>{lose("food",5);up(3);return "They wave thanks. Spirits rise a little."},"pet"],["Drive on",()=>"You can’t save everyone."]])}},
+{a:1,f(){ask("A military checkpoint. Floodlights, rifles, a sign: QUARANTINE.",[["Bluff with ‘official papers’",()=>{if(ch(.45)){G.fuel+=20;return "They wave you through and top off 20 gal."}adv(2);lose("food",40);return "Detained 2 days and searched. -40 lb food."},"badge"],["Bribe the guard ($50)",()=>{if(G.money<50)return "You can’t afford it. They wave you off.";G.money-=50;return "The barrier lifts. No questions."},"buy"],["Sneak around at night",()=>{adv(1);if(ch(.6))return "Dark, quiet. You slip by.";dmg(25);return "A patrol opens fire. The car takes hits."},"run"]])},ok:()=>G.mi>200},
+{f(){ask("🛞 BANG! A tire blows. The car lurches.",[["Replace it (1 part)",()=>{if(G.parts){G.parts--;return "Swapped in minutes. Good as new."}return ch(.5)?"No parts, but you jury-rig it.":(dmg(20),"No parts. The rim grinds the road.")},"tire"],["Patch with duct tape",()=>ch(.5)?"The tape holds!":(dmg(15),"It fails. You limp along.")],["Drive on the rim",()=>{dmg(25);return "Sparks fly. The car is battered."},"boom"]])}},
+{f(){ask("📻 A voice crackles on the radio: “Safe house… repeat, safe house…”",[["Follow the signal (1 day)",()=>{adv(1);const r=Math.random();if(r<.5){G.ammo+=4;G.food+=50;return "A hidden cache! +4 ammo, +50 lb food."}if(r<.8)return fight(.1)?"A trap! You win the brawl.":bite();up(12);return "Friendly survivors share stew. +12 health."},"radio"],["Switch it off",()=>"Silence. Safer."]])}},
+{z:1,f(){ask("A crashed military helicopter smolders in a field.",[["Search the wreck",()=>{if(ch(.7)){G.ammo+=4;G.med++;return "+4 ammo and 1 medicine from the cargo."}return fight(.15)?"The zombie crew lunges, but you win. Nothing useful.":bite()},"heli"],["Leave it",()=>"The smoke fades behind you."]])}},
+{a:1,f(){ask("A groan from the back seat… something got in!",[["Stab it",()=>ch(.7)?"Splat. Right through the skull.":bite(),"melee"],["Kick it out the door",()=>{if(ch(.5))return "Out it goes.";dmg(8);return "It clings to the door and smashes the mirror."},"run"],["Scream",()=>{hurt(pa(),8,"a heart attack");return "That didn’t help."},"skull"]])}},
+{a:1,f(){ask("Bandits block the road: “Tolls are $40, friend.”",[["Pay $40",()=>{if(G.money<40){lose("food",80);return "No cash. They take 80 lb of food."}G.money-=40;return "They tip their hats."},"buy"],["Shoot it out",()=>{if(fight(.15)){G.money+=60;return "The bandits flee! You loot $60."}hurt(pa(),25,"gunshot wounds");return "Gunfire! Someone is hit."},"gun"],["Speed away",()=>ch(.5)?"You blow past them!":(dmg(20),"Bullets ping off the car."),"car"]]) },ok:()=>G.mi>300},
+{f(){ask("🪂 A supply crate drifts down on a parachute!",[["Race for it",()=>{if(ch(.6)){G.food+=60;G.ammo+=3;G.med++;return "+60 food, +3 ammo, +1 medicine!"}return bite()+" Zombies converged on the crate."},"heli"],["Let it fall",()=>"Not worth dying for."]])}},
+{f(){ask("🔥 A wildfire rips across the road ahead!",[["Drive through",()=>{dmg(30);hurt(pa(),10,"burns");return "Flames lick the windows. The car is scorched."},"fire"],["Detour (2 days)",()=>{adv(2);return "Smoke fills the sky. Two days lost."},"map"],["Wait it out (1 day)",()=>{adv(1);return "The wind turns. The road clears."},"run"]])}},
+{f(){ask("Survivors’ bonfire: somebody has a guitar.",[["Join them (1 day)",()=>{adv(1);up(15);return "Songs, laughter, a full night’s sleep. +15 health."},"pet"],["Keep driving",()=>"There’s no time for songs."]])}},
+{f(){ask(ERA[G.era][7],[["Check it out (1 day)",()=>{adv(1);up(12);if(ch(.5)){G.med++;return "Good company and a spare medicine. +12 health."}return "A warm meal. +12 health."},"heal"],["Keep driving",()=>"Eyes on the road."]])}}
+];
+function ev(){const e=pk(E.filter(x=>!x.ok||x.ok()));if(e.a&&G.pet==0&&ch(.4)){fx("pet");return done("🐕 Your dog’s bark warns you in time. You slip around trouble.")}hz=e.z?1:0;if(e.z)fx("zom");e.f()}
+/* ===== CANVAS SCENE ===== */
+const c=$("c"),g=c.getContext("2d");
+function zb(x,y,f,k){g.fillStyle="#7da05a";g.fillRect(x,y-18,5,5);g.fillStyle=k;g.fillRect(x,y-13,5,8);g.fillStyle="#7da05a";g.fillRect(x-4,y-12,4,2);g.fillStyle="#222";g.fillRect(x+(f?0:2),y-5,2,5);g.fillRect(x+(f?3:1),y-5,2,5);g.fillStyle="#d00";g.fillRect(x+3,y-17,1,1)}
+function car(x,y,t,col,n){const[l,h,cx,cw,ct]=VT[t][4];g.fillStyle=col;g.fillRect(x,y-h-4,l,h);
+ if(ct){g.fillRect(x+cx,y-h-4-ct,cw,ct);g.fillStyle="#bfe3f0";g.fillRect(x+cx+2,y-h-3-ct,cw-4,ct-2)}else{g.fillStyle="#bfe3f0";for(let i=3;i<l-8;i+=9)g.fillRect(x+i,y-h-1,6,6)}
+ g.fillStyle="rgba(0,0,0,.3)";g.fillRect(x,y-6,l,2);
+ [9,l-10].forEach(w=>{g.fillStyle="#111";g.beginPath();g.arc(x+w,y-3,5,0,7);g.fill();const a=fr*(G.run?.4:0);g.fillStyle="#aaa";g.fillRect(x+w-1+Math.cos(a)*3,y-4+Math.sin(a)*3,2,2)});
+ if(n>.4){g.fillStyle=`rgba(255,240,150,${n*.35})`;g.beginPath();g.moveTo(x+l,y-8);g.lineTo(x+l+70,y-16);g.lineTo(x+l+70,y+2);g.fill()}
+ g.fillStyle="#ffd";g.fillRect(x+l-2,y-8,3,3)}
+function draw(){fr++;const n=(Math.sin(fr/700)+1)/2,e=ERA[G.era].slice(3,4)[0],sp=G.run?[2.2,3.2,4.4][G.pace]:0;off+=sp;
+ const gr=g.createLinearGradient(0,0,0,90);gr.addColorStop(0,e[0]);gr.addColorStop(1,e[1]);g.fillStyle=gr;g.fillRect(0,0,320,120);
+ g.fillStyle=`rgba(4,4,28,${.6*n})`;g.fillRect(0,0,320,120);
+ g.fillStyle=`rgba(210,245,150,${.3+.6*n})`;g.beginPath();g.arc(260,20,8,0,7);g.fill();
+ BL.forEach((b,i)=>{const x=((b[0]-off*.25)%880+880)%880-60;g.fillStyle="#150d1c";g.fillRect(x,90-b[1],b[2],b[1]);if(n>.4){g.fillStyle="#ffcf5a";for(let j=0;j<b[1]-8;j+=9)if((i*7+j)%3==0)g.fillRect(x+3,90-b[1]+4+j,2,3)}});
+ g.fillStyle="#241c1a";g.fillRect(0,88,320,32);g.fillStyle="#34343a";g.fillRect(0,92,320,22);
+ g.fillStyle="#d8c56a";for(let i=0;i<9;i++)g.fillRect(((i*44-off)%396+396)%396-30,103,22,2);
+ g.fillStyle="#000";for(let i=0;i<4;i++)g.fillRect(((i*130-off)%520+520)%520-20,64,2,28);
+ if(hz==2&&fr%40==0||hz==1&&fr%22==0||(G.run&&ch(.012)))ZS.push({x:330,y:96+R(16),k:pk(["#6a3b3b","#3b4a6a","#6a6a3b","#555"]),v:hz?.5+Math.random()*.6:0});
+ ZS.forEach(z=>z.x-=sp+z.v);ZS=ZS.filter(z=>z.x>-20).slice(-30);ZS.sort((a,b)=>a.y-b.y).forEach(z=>zb(z.x,z.y,(fr>>3)&1,z.k));
+ if(G.vt>=0){CX+=(CT-CX)*.07;const V=VT[G.vt],y=108+(G.run?Math.sin(fr/2.5)*.8:0);car(CX,y,G.vt,G.col,n);
+  if(G.run&&fr%6==0)SM.push({x:CX-1,y:100,a:.8,k:150});if(G.on&&G.hp<50&&fr%5==0)SM.push({x:CX+V[4][0]-6,y:84,a:1,k:40})}
+ SM=SM.filter(s=>(s.a-=.02)>0);SM.forEach(s=>{s.x-=sp+.3;s.y-=.4;g.fillStyle=`rgba(${s.k},${s.k},${s.k},${s.a*.5})`;g.fillRect(s.x,s.y,3,3)});
+ if(/rain|thunder/.test(G.w)){g.strokeStyle="rgba(180,200,255,.5)";g.beginPath();for(let i=0;i<30;i++){const x=(fr*5+i*37)%330,y=(fr*9+i*53)%120;g.moveTo(x,y);g.lineTo(x-3,y+7)}g.stroke()}
+ if(G.w=="snow"){g.fillStyle="#fff";for(let i=0;i<30;i++)g.fillRect((fr*1.5+i*37)%320,(fr*2+i*53)%120,2,2)}
+ if(G.w=="fog"){g.fillStyle="rgba(210,210,215,.28)";g.fillRect(0,0,320,120)}
+ if(G.w=="thunderstorm"&&fr%300<4){g.fillStyle="rgba(255,255,255,.6)";g.fillRect(0,0,320,120)}
+ requestAnimationFrame(draw)}
+intro();draw();
+</script></body></html>
